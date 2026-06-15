@@ -115,20 +115,51 @@ function CheckoutPage() {
     }, 100)
   }
 
-  // ── Confirm transfer (final submission) ──
-  async function handleConfirmTransfer() {
-    setConfirmed(true)
-    // In Phase 4, this calls the backend API
-    // For now, navigate to the confirmation page with the full order
+  // Replace handleConfirmTransfer with this:
+async function handleConfirmTransfer() {
+  setConfirmed(true)
+
+  try {
+    // Build the payload the backend expects
+    const payload = {
+      customerName:     form.name,
+      customerPhone:    form.phone,
+      customerEmail:    form.email,
+      productType:      orderData.product.id.startsWith('journal') ? 'journal' : 'tshirt',
+      productId:        orderData.product.id,
+      productName:      orderData.product.name,
+      productColor:     orderData.selectedColor,
+      size:             orderData.selectedSize ?? null,
+      withPen:          orderData.withPen,
+      isCustomized:     orderData.isCustomized,
+      customType:       orderData.customType,
+      customText:       orderData.customText,
+      customFont:       orderData.selectedFont,
+      logoUrl:          null,   // Phase 5: upload to Supabase Storage
+      quantity:         orderData.quantity,
+      locationType:     form.locationType,
+      deliveryAddress:  form.address,
+      isUrgent:         form.isUrgent,
+      lineItems,
+      total,
+      deliveryDate:     delivery.dateString,
+      deliveryTime:     delivery.timeSlot,
+      deliveryLocation: delivery.location,
+    }
+
+    const result = await api.createOrder(payload)
+
+    // Navigate to confirmation with the full order details
     navigate('/order-confirm', {
-      state: {
-        orderData: enrichedOrder,
-        lineItems,
-        total,
-        delivery,
-      }
+      state: { orderData: { ...enrichedOrder }, lineItems, total, delivery, orderId: result.orderId }
     })
+
+  } catch (err) {
+    // If the API call fails, show an error and let the user retry
+    alert(`Something went wrong: ${err.message}. Please try again.`)
+    setConfirmed(false)
   }
+}
 
   return (
     <div className="min-h-screen bg-orange-50 py-10 px-4">

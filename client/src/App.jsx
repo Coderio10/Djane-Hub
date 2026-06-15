@@ -15,7 +15,7 @@ const ComingSoon = ({ name }) => (
 function App() {
   return (
     <Routes>
-      <Route path="/" element={<Home />} />
+      <Route path="/" element={<Shop />} />
       <Route path="/shop" element={<Shop />} />
       <Route path="/product/:id" element={<ProductPage />} />
       <Route path="/checkout" element={<CheckoutPage />} />
