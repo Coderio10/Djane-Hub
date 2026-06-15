@@ -1,6 +1,7 @@
 // src/pages/CheckoutPage.jsx
 import { useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
+import { api } from '../utils/api'
 import { calculateOrder, formatNaira } from '../utils/pricingEngine'
 import { calculateDeliveryDate, deliverySummary } from '../utils/deliveryDate'
 import OrderSummary from '../components/OrderSummary'

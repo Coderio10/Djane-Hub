@@ -1,21 +1,9 @@
-// server/routes/admin.js
-// You'll fully build this in Phase 6 — for now just a stub
-const express = require('express')
-const router  = express.Router()
-
-router.get('/ping', (req, res) => {
-  res.json({ message: 'Admin routes are working' })
-})
-
-module.exports = router
-
 // server/routes/admin.js — full version
 const express  = require('express')
 const supabase = require('../services/supabase')
 const { sendBroadcast } = require('../services/resend')
 
 const router = express.Router()
-
 // GET /api/admin/delivery-slot
 // Returns the current week's delivery slot
 router.get('/delivery-slot', async (req, res, next) => {

@@ -17,14 +17,6 @@ const PORT = process.env.PORT || 3001
 // Add at the top
 const { startDeliveryReminderJob } = require('./services/scheduler')
 
-// Add AFTER app.listen — start jobs after server is ready
-app.listen(PORT, () => {
-  console.log(`Server running on http://localhost:${PORT}`)
-
-  // Start background jobs
-  startDeliveryReminderJob()
-})
-
 // ── Middleware ──
 // Middleware is a function that runs on EVERY request before your routes
 // Think of it as a pipeline — request goes through each middleware in order
@@ -65,4 +57,7 @@ app.use((err, req, res, next) => {
 // ── Start the server ──
 app.listen(PORT, () => {
   console.log(`Server running on http://localhost:${PORT}`)
+
+  // Start background jobs after server is listening
+  startDeliveryReminderJob()
 })
