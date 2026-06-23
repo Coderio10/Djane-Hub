@@ -18,7 +18,7 @@ const PROCESSING_DAYS = {
  * Rules:
  * - Journals: 2 business days
  * - Tee shirts: 3 business days
- * - Orders placed Friday/Saturday/Sunday: counting starts from Monday
+ * - Orders placed Friday/Saturday/Sunday: counting starts from Tuesday
  * - Urgent: subtract 1 day (minimum 1 business day)
  *
  * Returns:
@@ -38,19 +38,19 @@ export function calculateDeliveryDate({
 
   // ── Step 1: Find the start date ──
   // If order is placed on Friday (5), Saturday (6), or Sunday (0),
-  // we start counting from the following Monday
+  // we start counting from the following Tuesday
   let startDate = new Date(orderDate)
   const dayOfWeek = startDate.getDay()
 
   if (dayOfWeek === FRIDAY) {
-    // Friday → add 3 days to reach Monday
-    startDate.setDate(startDate.getDate() + 3)
+    // Friday → add 4 days to reach Tuesday
+    startDate.setDate(startDate.getDate() + 4)
   } else if (dayOfWeek === SATURDAY) {
-    // Saturday → add 2 days to reach Monday
-    startDate.setDate(startDate.getDate() + 2)
+    // Saturday → add 3 days to reach Tuesday
+    startDate.setDate(startDate.getDate() + 3)
   } else if (dayOfWeek === SUNDAY) {
-    // Sunday → add 1 day to reach Monday
-    startDate.setDate(startDate.getDate() + 1)
+    // Sunday → add 2 days to reach Tuesday
+    startDate.setDate(startDate.getDate() + 2)
   }
   // Monday–Thursday → start counting from today
 

@@ -347,8 +347,8 @@ function buildBroadcastEmail(body) {
 
   return emailShell(content)
 }
-
-module.exports = {
+// At the bottom of emailTemplates.js — replace module.exports with:
+export {
   buildConfirmationEmail,
   buildAdminAlertEmail,
   buildReminderEmail,

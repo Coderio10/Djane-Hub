@@ -1,41 +1,22 @@
 // server/services/scheduler.js
-const cron     = require('node-cron')
-const supabase = require('./supabase')
-const { sendDeliveryReminder } = require('./resend')
+import cron from 'node-cron'
+import supabase from './supabase.js'
+import { sendDeliveryReminder } from './resend.js'
 
-/**
- * Runs every day at 8:00 AM.
- * Finds all orders delivering today and sends reminder emails.
- *
- * Cron syntax: '0 8 * * *'
- * ┌─── minute (0)
- * │ ┌─── hour (8)
- * │ │ ┌─── day of month (* = every)
- * │ │ │ ┌─── month (* = every)
- * │ │ │ │ ┌─── day of week (* = every)
- * 0 8 * * *
- */
-function startDeliveryReminderJob() {
+export function startDeliveryReminderJob() {
   cron.schedule('0 8 * * *', async () => {
     console.log('Running delivery reminder job:', new Date().toISOString())
 
     try {
-      // Get today's date in YYYY-MM-DD format
-      // We stored delivery dates as text strings like "Tuesday, 15 July 2025"
-      // So we need to match the formatted string — see note below
       const today = new Date().toLocaleDateString('en-NG', {
-        weekday: 'long',
-        day:     'numeric',
-        month:   'long',
-        year:    'numeric',
+        weekday: 'long', day: 'numeric', month: 'long', year: 'numeric',
       })
 
-      // Find all confirmed orders delivering today
       const { data: orders, error } = await supabase
         .from('orders')
         .select('*')
-        .eq('delivery_date', today)   // matches the formatted date string
-        .eq('status', 'confirmed')    // only confirmed — not pending or delivered
+        .eq('delivery_date', today)
+        .eq('status', 'confirmed')
 
       if (error) throw error
 
@@ -46,8 +27,6 @@ function startDeliveryReminderJob() {
 
       console.log(`Sending delivery reminders to ${orders.length} customer(s)`)
 
-      // Send a reminder to each customer
-      // allSettled so one failure doesn't stop the rest
       const results = await Promise.allSettled(
         orders.map((order) => sendDeliveryReminder(order))
       )
@@ -64,5 +43,3 @@ function startDeliveryReminderJob() {
 
   console.log('Delivery reminder cron job scheduled (runs daily at 8:00 AM)')
 }
-
-module.exports = { startDeliveryReminderJob }
