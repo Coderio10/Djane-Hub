@@ -1,1 +1,10 @@
-@import "tailwindcss";
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* small selection of base overrides so Tailwind utilities inherit our theme */
+:root{
+	--purple: #7c3aed;
+}
+
+body{ background: #ffffff; color: #0b0b0b; }
