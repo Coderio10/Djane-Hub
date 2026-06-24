@@ -2,7 +2,7 @@
 import { formatNaira } from '../utils/pricingEngine'
 import { deliverySummary } from '../utils/deliveryDate'
 
-function OrderSummary({ lineItems, total, delivery, locationType, address }) {
+function OrderSummary({ lineItems, total, delivery, address }) {
   return (
     <div className="bg-white rounded-2xl border border-orange-100 p-6 space-y-5">
       <h2 className="text-lg font-bold text-gray-900">Order summary</h2>

@@ -1,6 +1,4 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
 
 /* small selection of base overrides so Tailwind utilities inherit our theme */
 :root{

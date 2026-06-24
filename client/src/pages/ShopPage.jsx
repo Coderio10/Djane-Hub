@@ -3,136 +3,199 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { journals, tshirts } from '../data/products'
 
-// --- ProductCard component (defined here for now, can be moved to /components later) ---
+function ProductVisual({ type, product, size = 'card' }) {
+  return (
+    <div className={`product-visual product-visual--${type} product-visual--${size}`}>
+      <div className="product-visual__glow" />
+      <div className="product-visual__object">
+        <span>{type === 'journal' ? '📓' : '👕'}</span>
+      </div>
+      <div className="product-visual__label">{product.name}</div>
+    </div>
+  )
+}
+
 function ProductCard({ product, type }) {
   const navigate = useNavigate()
-
-  // Format price as ₦3,500
-  const formatPrice = (amount) =>
-    `₦${amount.toLocaleString('en-NG')}`
+  const formatPrice = (amount) => `₦${amount.toLocaleString('en-NG')}`
 
   return (
-    <div className="bg-white rounded-2xl border border-orange-100 overflow-hidden hover:shadow-lg hover:-translate-y-1 transition-all duration-300 group">
-      
-      {/* Product image placeholder */}
-      <div className="h-52 bg-orange-50 flex items-center justify-center">
-        <span className="text-6xl">
-          {type === 'journal' ? '📓' : '👕'}
-        </span>
-      </div>
+    <article className="premium-card product-card group">
+      <button
+        type="button"
+        onClick={() => navigate(`/product/${product.id}`)}
+        className="product-card__media"
+        aria-label={`View ${product.name}`}
+      >
+        <ProductVisual type={type} product={product} />
+      </button>
 
-      {/* Product info */}
-      <div className="p-5">
-        <h3 className="font-semibold text-gray-900 text-lg mb-1">
-          {product.name}
-        </h3>
-        <p className="text-gray-500 text-sm mb-4 leading-relaxed">
-          {product.description}
-        </p>
+      <div className="product-card__body">
+        <div>
+          <p className="eyebrow">{type === 'journal' ? 'Journal' : 'Tee shirt'}</p>
+          <h3>{product.name}</h3>
+          <p>{product.description}</p>
+        </div>
 
-        {/* Color swatches */}
-        <div className="flex gap-2 mb-4">
+        <div className="product-card__swatches">
           {product.colors.map((color, i) => (
-            <div
-              key={i}
+            <span
+              key={color}
               title={product.colorNames[i]}
-              className="w-5 h-5 rounded-full border border-gray-200 cursor-pointer hover:scale-110 transition-transform"
+              className="color-swatch"
               style={{ backgroundColor: color }}
             />
           ))}
         </div>
 
-        {/* Price + CTA */}
-        <div className="flex items-center justify-between">
-          <span className="text-xl font-bold text-orange-500">
-            {formatPrice(product.basePrice)}
-          </span>
+        <div className="product-card__footer">
+          <span>{formatPrice(product.basePrice)}</span>
           <button
             onClick={() => navigate(`/product/${product.id}`)}
-            className="bg-orange-500 hover:bg-orange-600 text-white px-5 py-2 rounded-xl text-sm font-semibold transition-colors"
+            className="btn btn--dark"
           >
             Order Now
           </button>
         </div>
 
-        {/* Customizable badge — journals only */}
         {type === 'journal' && (
-          <div className="mt-3">
-            <span className="inline-block bg-orange-100 text-orange-700 text-xs font-medium px-3 py-1 rounded-full">
-              ✨ Customisable
-            </span>
-          </div>
+          <span className="badge badge--orange">Customisable</span>
         )}
       </div>
-    </div>
+    </article>
   )
 }
 
-// --- Main ShopPage component ---
 function ShopPage() {
-  // useState tracks which tab is active
-  // 'journals' is the default when the page loads
   const [activeTab, setActiveTab] = useState('journals')
+  const navigate = useNavigate()
 
-  // Decide which products to show based on the active tab
   const products = activeTab === 'journals' ? journals : tshirts
   const type = activeTab === 'journals' ? 'journal' : 'tshirt'
+  const featured = journals[1] ?? journals[0]
 
   return (
-    <div className="min-h-screen bg-orange-50">
-      
-      {/* Page header */}
-      <div className="bg-white border-b border-orange-100 px-6 py-10 text-center">
-        <h1 className="text-4xl font-bold text-gray-900 mb-2">
-          Djane's Hub Shop
-        </h1>
-        <p className="text-gray-500 text-lg">
-          Journals, tee shirts, and custom designs — all made for you.
-        </p>
-      </div>
+    <div className="store-shell">
+      <header className="site-nav">
+        <button onClick={() => navigate('/shop')} className="brand-mark">
+          <span>DH</span>
+          <strong>Djane's Hub</strong>
+        </button>
+        <nav aria-label="Store navigation">
+          <button onClick={() => navigate('/shop')}>Shop</button>
+          <button onClick={() => setActiveTab('journals')}>Journals</button>
+          <button onClick={() => setActiveTab('tshirts')}>Tee Shirts</button>
+          <button onClick={() => navigate('/admin')}>Admin</button>
+        </nav>
+        <button onClick={() => navigate('/checkout')} className="nav-action">
+          Checkout
+        </button>
+      </header>
 
-      {/* Tab switcher */}
-      <div className="flex justify-center pt-8 pb-6 px-6">
-        <div className="bg-white rounded-2xl p-1.5 border border-orange-100 flex gap-1 shadow-sm">
-          
-          <button
-            onClick={() => setActiveTab('journals')}
-            className={`px-8 py-2.5 rounded-xl text-sm font-semibold transition-all ${
-              activeTab === 'journals'
-                ? 'bg-orange-500 text-white shadow-sm'
-                : 'text-gray-500 hover:text-orange-500'
-            }`}
-          >
-            📓 Journals
-          </button>
+      <main>
+        <section className="hero-section">
+          <div className="hero-copy">
+            <span className="eyebrow">Custom stationery and apparel</span>
+            <h1>Premium everyday pieces, personalised for you.</h1>
+            <p>
+              Journals, tee shirts, and custom designs made with clean finishes,
+              thoughtful details, and a simple checkout flow.
+            </p>
+            <div className="hero-actions">
+              <button onClick={() => setActiveTab('journals')} className="btn btn--orange">
+                Shop Journals
+              </button>
+              <button onClick={() => setActiveTab('tshirts')} className="btn btn--light">
+                Explore Tees
+              </button>
+            </div>
+          </div>
 
-          <button
-            onClick={() => setActiveTab('tshirts')}
-            className={`px-8 py-2.5 rounded-xl text-sm font-semibold transition-all ${
-              activeTab === 'tshirts'
-                ? 'bg-orange-500 text-white shadow-sm'
-                : 'text-gray-500 hover:text-orange-500'
-            }`}
-          >
-            👕 Tee Shirts
-          </button>
+          <div className="hero-showcase">
+            <div className="hero-showcase__main">
+              <ProductVisual type="journal" product={featured} size="hero" />
+            </div>
+            <div className="hero-showcase__meta">
+              <span>From ₦{featured.basePrice.toLocaleString('en-NG')}</span>
+              <strong>{featured.name}</strong>
+              <p>{featured.description}</p>
+            </div>
+          </div>
+        </section>
 
-        </div>
-      </div>
+        <section className="section-block">
+          <div className="section-heading">
+            <div>
+              <span className="eyebrow">Featured products</span>
+              <h2>Shop by collection</h2>
+            </div>
+            <div className="segmented-control" role="tablist" aria-label="Product category">
+              <button
+                role="tab"
+                aria-selected={activeTab === 'journals'}
+                onClick={() => setActiveTab('journals')}
+                className={activeTab === 'journals' ? 'is-active' : ''}
+              >
+                Journals
+              </button>
+              <button
+                role="tab"
+                aria-selected={activeTab === 'tshirts'}
+                onClick={() => setActiveTab('tshirts')}
+                className={activeTab === 'tshirts' ? 'is-active' : ''}
+              >
+                Tee Shirts
+              </button>
+            </div>
+          </div>
 
-      {/* Product grid */}
-      <div className="max-w-6xl mx-auto px-6 pb-16">
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          {products.map((product) => (
-            <ProductCard
-              key={product.id}
-              product={product}
-              type={type}
-            />
+          <div className="product-grid">
+            {products.map((product) => (
+              <ProductCard
+                key={product.id}
+                product={product}
+                type={type}
+              />
+            ))}
+          </div>
+        </section>
+
+        <section className="category-grid">
+          {[
+            ['Custom journals', 'Add names, text, logos, and matching pens.', 'journal'],
+            ['Premium tees', 'Clean wardrobe staples in practical colours.', 'tshirt'],
+            ['Delivery support', 'FUTA pickup, outside delivery, and urgent options.', 'delivery'],
+          ].map(([title, copy, variant]) => (
+            <div key={title} className={`category-tile category-tile--${variant}`}>
+              <span>{variant === 'journal' ? '01' : variant === 'tshirt' ? '02' : '03'}</span>
+              <h3>{title}</h3>
+              <p>{copy}</p>
+            </div>
           ))}
-        </div>
-      </div>
+        </section>
 
+        <section className="service-strip">
+          <h2>Experience streamlined shopping with Djane's Hub</h2>
+          <div>
+            {[
+              ['Free FUTA Delivery', 'Pickup at SUB Frontage is included.'],
+              ['Custom Design Help', 'Text, logos, or a WhatsApp design route.'],
+              ['Clear Checkout', 'Review totals, delivery, and transfer details.'],
+            ].map(([title, copy]) => (
+              <article key={title}>
+                <span />
+                <h3>{title}</h3>
+                <p>{copy}</p>
+              </article>
+            ))}
+          </div>
+        </section>
+      </main>
+
+      <footer className="site-footer">
+        <strong>Djane's Hub</strong>
+        <p>Journals, tee shirts, and custom designs made for you.</p>
+      </footer>
     </div>
   )
 }

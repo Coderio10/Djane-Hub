@@ -1,10 +1,22 @@
-// src/pages/ProductPage.jsx — updated imports + usage
+// src/pages/ProductPage.jsx
+import { useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { journals, tshirts } from '../data/products'
 import JournalCustomizer from '../components/JournalCustomizer'
 
-function ProductPage() {
+function ProductVisual({ type, product, size = 'detail' }) {
+  return (
+    <div className={`product-visual product-visual--${type} product-visual--${size}`}>
+      <div className="product-visual__glow" />
+      <div className="product-visual__object">
+        <span>{type === 'journal' ? '📓' : '👕'}</span>
+      </div>
+      <div className="product-visual__label">{product.name}</div>
+    </div>
+  )
+}
 
+function ProductPage() {
   const { id } = useParams()
   const navigate = useNavigate()
 
@@ -14,83 +26,224 @@ function ProductPage() {
 
   if (!product) {
     return (
-      <div className="min-h-screen bg-orange-50 flex flex-col items-center justify-center gap-4">
-        <p className="text-2xl font-semibold text-gray-700">Product not found</p>
-        <button onClick={() => navigate('/shop')}
-          className="bg-orange-500 text-white px-6 py-2 rounded-xl font-semibold">
-          Back to Shop
-        </button>
+      <div className="store-shell product-not-found">
+        <div className="empty-state">
+          <p>Product not found</p>
+          <button onClick={() => navigate('/shop')} className="btn btn--orange">
+            Back to Shop
+          </button>
+        </div>
       </div>
     )
   }
 
-  const isJournal = id.startsWith('journal')
+  return <ProductDetailContent product={product} id={id} />
+}
 
-   // Update handleOrderReady to carry the data to checkout
+function ProductDetailContent({ product, id }) {
+  const navigate = useNavigate()
+  const isJournal = id.startsWith('journal')
+  const productType = isJournal ? 'journal' : 'tshirt'
+  const related = (isJournal ? journals : tshirts).filter((item) => item.id !== id)
+  const [selectedSize, setSelectedSize] = useState(product.sizes?.[0] ?? null)
+  const [selectedColor, setSelectedColor] = useState(product.colors[0])
+  const [quantity, setQuantity] = useState(1)
+
   function handleOrderReady(orderData) {
     navigate('/checkout', {
-      // 'state' is React Router's way of passing data between pages
-      // It's available in the destination via useLocation()
-      // It's NOT in the URL — so it's not visible or bookmarkable
       state: { orderData }
     })
   }
 
-  return (
-    <div className="min-h-screen bg-orange-50 py-12 px-6">
-      <div className="max-w-2xl mx-auto">
+  function handleTeeCheckout() {
+    handleOrderReady({
+      product,
+      selectedColor,
+      selectedSize,
+      withPen: false,
+      isCustomized: false,
+      customType: null,
+      customText: '',
+      selectedFont: null,
+      uploadedLogo: null,
+      quantity,
+      total: product.basePrice * quantity,
+    })
+  }
 
-        <button onClick={() => navigate('/shop')}
-          className="text-orange-500 hover:text-orange-600 text-sm font-medium mb-6 flex items-center gap-1">
+  return (
+    <div className="store-shell product-page">
+      <header className="site-nav">
+        <button onClick={() => navigate('/shop')} className="brand-mark">
+          <span>DH</span>
+          <strong>Djane's Hub</strong>
+        </button>
+        <nav aria-label="Store navigation">
+          <button onClick={() => navigate('/shop')}>Shop</button>
+          <button onClick={() => navigate('/shop')}>Journals</button>
+          <button onClick={() => navigate('/shop')}>Tee Shirts</button>
+        </nav>
+        <button onClick={() => navigate(-1)} className="nav-action">
+          Back
+        </button>
+      </header>
+
+      <main>
+        <button onClick={() => navigate('/shop')} className="back-link">
           ← Back to Shop
         </button>
 
-        {/* Product header */}
-        <div className="bg-white rounded-2xl border border-orange-100 p-8 mb-6">
-          <div className="h-48 bg-orange-50 rounded-xl flex items-center justify-center mb-6">
-            <span className="text-7xl">{isJournal ? '📓' : '👕'}</span>
+        <section className="product-detail">
+          <div className="product-gallery">
+            <div className="product-gallery__main">
+              <ProductVisual type={productType} product={product} />
+            </div>
+            <div className="product-gallery__thumbs">
+              {[0, 1, 2, 3].map((item) => (
+                <button key={item} aria-label={`${product.name} preview ${item + 1}`}>
+                  <ProductVisual type={productType} product={product} size="thumb" />
+                </button>
+              ))}
+            </div>
           </div>
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">{product.name}</h1>
-          <p className="text-gray-500 mb-2">{product.description}</p>
-          <p className="text-2xl font-bold text-orange-500">
-            ₦{product.basePrice.toLocaleString('en-NG')}
-          </p>
-        </div>
 
-        {/* Journal customizer */}
+          <div className="product-info">
+            <span className="eyebrow">{isJournal ? 'Custom journal' : 'Premium tee shirt'}</span>
+            <h1>{product.name}</h1>
+            <div className="rating-row">
+              <span>★★★★★</span>
+              <p>25k+ total reviews</p>
+            </div>
+            <p className="product-description">{product.description}</p>
+            <p className="product-price">₦{product.basePrice.toLocaleString('en-NG')}</p>
+
+            <div className="option-block">
+              <div className="option-heading">
+                <strong>Color</strong>
+                <span>{product.colorNames[product.colors.indexOf(selectedColor)]}</span>
+              </div>
+              <div className="product-card__swatches product-card__swatches--large">
+                {product.colors.map((color, i) => (
+                  <button
+                    key={color}
+                    title={product.colorNames[i]}
+                    onClick={() => setSelectedColor(color)}
+                    className={`color-swatch ${selectedColor === color ? 'is-active' : ''}`}
+                    style={{ backgroundColor: color }}
+                  />
+                ))}
+              </div>
+            </div>
+
+            {!isJournal && (
+              <>
+                <div className="option-block">
+                  <div className="option-heading">
+                    <strong>Size</strong>
+                    <span>Size chart</span>
+                  </div>
+                  <div className="size-grid">
+                    {product.sizes.map((size) => (
+                      <button
+                        key={size}
+                        onClick={() => setSelectedSize(size)}
+                        className={selectedSize === size ? 'is-active' : ''}
+                      >
+                        {size}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="purchase-row">
+                  <div className="quantity-stepper">
+                    <button onClick={() => setQuantity((q) => Math.max(1, q - 1))}>−</button>
+                    <span>{quantity}</span>
+                    <button onClick={() => setQuantity((q) => q + 1)}>+</button>
+                  </div>
+                  <button onClick={handleTeeCheckout} className="btn btn--dark">
+                    Buy Now
+                  </button>
+                  <button onClick={handleTeeCheckout} className="btn btn--light">
+                    Add To Cart
+                  </button>
+                </div>
+              </>
+            )}
+
+            <div className="spec-grid">
+              {[
+                ['Material', isJournal ? 'Premium paper and durable cover' : '100% cotton, premium weight'],
+                ['Delivery', isJournal ? '2 business days' : '3 business days'],
+                ['Customisation', isJournal ? 'Text, logo, or design support' : 'Size and colour selection'],
+                ['Pickup', 'SUB Frontage, FUTA'],
+              ].map(([label, value]) => (
+                <div key={label}>
+                  <span>{label}</span>
+                  <strong>{value}</strong>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
         {isJournal && (
-          <div className="bg-white rounded-2xl border border-orange-100 p-8">
-            <h2 className="text-xl font-bold text-gray-900 mb-6">
-              Customise your journal
-            </h2>
+          <section className="customizer-panel">
+            <div className="section-heading">
+              <div>
+                <span className="eyebrow">Make it personal</span>
+                <h2>Customise your journal</h2>
+              </div>
+              <p>Choose colour, add-ons, cover text, logo upload, quantity, and checkout.</p>
+            </div>
             <JournalCustomizer
               product={product}
               onOrderReady={handleOrderReady}
             />
-          </div>
+          </section>
         )}
 
-        {/* Tee shirt — simpler flow, Phase 3 will expand this */}
-        {!isJournal && (
-          <div className="bg-white rounded-2xl border border-orange-100 p-8">
-            <p className="text-sm font-semibold text-gray-700 mb-3">Choose a size</p>
-            <div className="flex gap-2 mb-8">
-              {product.sizes.map((size) => (
-                <button key={size}
-                  className="w-12 h-12 rounded-xl border border-orange-200 text-sm font-semibold text-gray-700 hover:border-orange-500 hover:text-orange-500 transition-colors">
-                  {size}
-                </button>
-              ))}
+        <section className="reviews-section">
+          <div>
+            <span className="eyebrow">Reviews</span>
+            <h2>Loved for clean finishes and easy ordering.</h2>
+          </div>
+          <div className="review-grid">
+            {[
+              ['Amina', 'The journal looked premium and the checkout was straightforward.'],
+              ['David', 'The tee quality feels solid. Delivery timing was clear too.'],
+              ['Tolu', 'I liked seeing the journal preview before placing my order.'],
+            ].map(([name, quote]) => (
+              <article key={name}>
+                <span>★★★★★</span>
+                <p>{quote}</p>
+                <strong>{name}</strong>
+              </article>
+            ))}
+          </div>
+        </section>
+
+        <section className="related-section">
+          <div className="section-heading">
+            <div>
+              <span className="eyebrow">Related products</span>
+              <h2>More from this collection</h2>
             </div>
-            <button
-              onClick={() => navigate('/checkout')}
-              className="w-full bg-orange-500 hover:bg-orange-600 text-white py-4 rounded-xl font-semibold text-lg transition-colors">
-              Proceed to Checkout →
-            </button>
           </div>
-        )}
-
-      </div>
+          <div className="product-grid product-grid--compact">
+            {related.map((item) => (
+              <article key={item.id} className="premium-card related-card">
+                <ProductVisual type={productType} product={item} size="thumb" />
+                <h3>{item.name}</h3>
+                <p>₦{item.basePrice.toLocaleString('en-NG')}</p>
+                <button onClick={() => navigate(`/product/${item.id}`)} className="btn btn--light">
+                  View Product
+                </button>
+              </article>
+            ))}
+          </div>
+        </section>
+      </main>
     </div>
   )
 }

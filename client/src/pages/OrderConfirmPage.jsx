@@ -9,7 +9,7 @@ function OrderConfirmPage() {
 
   if (!state) return <Navigate to="/shop" replace />
 
-  const { orderData, lineItems, total, delivery } = state
+  const { orderData, total, delivery } = state
 
   return (
     <div className="min-h-screen bg-orange-50 flex items-center justify-center px-4 py-16">
