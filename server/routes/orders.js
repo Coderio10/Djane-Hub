@@ -2,6 +2,7 @@
 import express from 'express'
 import supabase from '../services/supabase.js'
 import { sendOrderConfirmation, sendAdminAlert } from '../services/resend.js'
+import { requireAdmin } from '../middleware/adminAuth.js'
 
 const router = express.Router()
 
@@ -92,7 +93,7 @@ router.post('/', async (req, res, next) => {
   }
 })
 
-router.get('/', async (req, res, next) => {
+router.get('/', requireAdmin, async (req, res, next) => {
   try {
     const { data, error } = await supabase
       .from('orders')
@@ -107,7 +108,7 @@ router.get('/', async (req, res, next) => {
   }
 })
 
-router.patch('/:id', async (req, res, next) => {
+router.patch('/:id', requireAdmin, async (req, res, next) => {
   try {
     const { id } = req.params
     const { status } = req.body

@@ -16,24 +16,23 @@ function PasswordGate({ onUnlock }) {
   const [password, setPassword] = useState('')
   const [error,    setError]    = useState(false)
   const [shake,    setShake]    = useState(false)
+  const [loading,  setLoading]  = useState(false)
 
-  function handleSubmit(e) {
+  async function handleSubmit(e) {
     e.preventDefault()
+    setLoading(true)
 
-    // import.meta.env reads Vite environment variables
-    const correct = import.meta.env.VITE_ADMIN_PASSWORD
-
-    if (password === correct) {
-      // Store in sessionStorage — stays unlocked for this browser tab session
-      // Closes automatically when the tab closes
-      sessionStorage.setItem('admin_unlocked', 'true')
+    try {
+      const data = await api.adminLogin(password)
+      sessionStorage.setItem('admin_token', data.token)
       onUnlock()
-    } else {
+    } catch {
       setError(true)
       setShake(true)
       setPassword('')
-      // Remove shake class after animation completes
       setTimeout(() => setShake(false), 500)
+    } finally {
+      setLoading(false)
     }
   }
 
@@ -68,9 +67,10 @@ function PasswordGate({ onUnlock }) {
           </div>
           <button
             type="submit"
+            disabled={loading || !password}
             className="w-full bg-orange-500 hover:bg-orange-600 text-white py-3 rounded-xl font-semibold transition-colors"
           >
-            Enter
+            {loading ? 'Checking...' : 'Enter'}
           </button>
         </form>
       </div>
@@ -478,7 +478,7 @@ function BroadcastPanel() {
 function AdminPage() {
   // Check if already unlocked this session
   const [unlocked, setUnlocked] = useState(
-    sessionStorage.getItem('admin_unlocked') === 'true'
+    Boolean(sessionStorage.getItem('admin_token'))
   )
   const [activeTab, setActiveTab] = useState(TABS.ORDERS)
 
@@ -503,7 +503,7 @@ function AdminPage() {
         </div>
         <button
           onClick={() => {
-            sessionStorage.removeItem('admin_unlocked')
+            sessionStorage.removeItem('admin_token')
             setUnlocked(false)
           }}
           className="text-xs text-gray-400 hover:text-red-500 transition-colors"

@@ -2,8 +2,13 @@
 import express from 'express'
 import supabase from '../services/supabase.js'
 import { sendBroadcast } from '../services/resend.js'
+import { loginAdmin, requireAdmin } from '../middleware/adminAuth.js'
 
 const router = express.Router()
+
+router.post('/login', loginAdmin)
+
+router.use(requireAdmin)
 
 router.get('/delivery-slot', async (req, res, next) => {
   try {
