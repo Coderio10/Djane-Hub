@@ -10,7 +10,7 @@ export const journals = [
     basePrice: 3500,
     colors: ["#1C1917", "#78350F", "#DC2626", "#1D4ED8", "#166534", "#FEF3C7"],
     colorNames: ["Midnight Black", "Warm Brown", "Deep Red", "Royal Blue", "Forest Green", "Cream"],
-    image: null,   // you'll add real images later
+    image: "https://images.unsplash.com/photo-1519222970733-f546218fa6d7?auto=format&fit=crop&w=900&q=80",
   },
   {
     id: "journal-premium",
@@ -19,7 +19,7 @@ export const journals = [
     basePrice: 4500,
     colors: ["#1C1917", "#78350F", "#7C3AED", "#0F766E"],
     colorNames: ["Midnight Black", "Warm Brown", "Royal Purple", "Teal"],
-    image: null,
+    image: "https://images.unsplash.com/photo-1553729784-e91953dec042?auto=format&fit=crop&w=900&q=80",
   },
   {
     id: "journal-pocket",
@@ -28,7 +28,7 @@ export const journals = [
     basePrice: 2500,
     colors: ["#1C1917", "#DC2626", "#1D4ED8", "#FEF3C7"],
     colorNames: ["Midnight Black", "Deep Red", "Royal Blue", "Cream"],
-    image: null,
+    image: "https://images.unsplash.com/photo-1611078482568-5f3ec93eae2d?auto=format&fit=crop&w=900&q=80",
   },
 ]
 
@@ -41,7 +41,7 @@ export const tshirts = [
     sizes: ["S", "M", "L", "XL", "XXL"],
     colors: ["#FFFFFF", "#1C1917", "#DC2626", "#1D4ED8"],
     colorNames: ["White", "Black", "Red", "Blue"],
-    image: null,
+    image: "https://images.unsplash.com/photo-1520975912647-1cb3f14d5d66?auto=format&fit=crop&w=900&q=80",
   },
   {
     id: "tee-oversized",
@@ -51,7 +51,7 @@ export const tshirts = [
     sizes: ["S", "M", "L", "XL", "XXL"],
     colors: ["#FFFFFF", "#1C1917", "#6B7280", "#78350F"],
     colorNames: ["White", "Black", "Ash Grey", "Brown"],
-    image: null,
+    image: "https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?auto=format&fit=crop&w=900&q=80",
   },
   {
     id: "tee-polo",
@@ -61,6 +61,6 @@ export const tshirts = [
     sizes: ["S", "M", "L", "XL", "XXL"],
     colors: ["#FFFFFF", "#1C1917", "#166534", "#1D4ED8"],
     colorNames: ["White", "Black", "Green", "Blue"],
-    image: null,
+    image: "https://images.unsplash.com/photo-1520975865054-03b6d90f8dea?auto=format&fit=crop&w=900&q=80",
   },
 ]

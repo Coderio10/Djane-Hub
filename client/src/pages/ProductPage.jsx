@@ -9,7 +9,15 @@ function ProductVisual({ type, product, size = 'detail' }) {
     <div className={`product-visual product-visual--${type} product-visual--${size}`}>
       <div className="product-visual__glow" />
       <div className="product-visual__object">
-        <span>{type === 'journal' ? '📓' : '👕'}</span>
+        {product.image ? (
+          <img
+            src={product.image}
+            alt={product.name}
+            className="product-visual__image"
+          />
+        ) : (
+          <span>{type === 'journal' ? '📓' : '👕'}</span>
+        )}
       </div>
       <div className="product-visual__label">{product.name}</div>
     </div>

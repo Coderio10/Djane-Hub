@@ -8,7 +8,15 @@ function ProductVisual({ type, product, size = 'card' }) {
     <div className={`product-visual product-visual--${type} product-visual--${size}`}>
       <div className="product-visual__glow" />
       <div className="product-visual__object">
-        <span>{type === 'journal' ? '📓' : '👕'}</span>
+        {product.image ? (
+          <img
+            src={product.image}
+            alt={product.name}
+            className="product-visual__image"
+          />
+        ) : (
+          <span>{type === 'journal' ? '📓' : '👕'}</span>
+        )}
       </div>
       <div className="product-visual__label">{product.name}</div>
     </div>
@@ -85,7 +93,7 @@ function ShopPage() {
           <button onClick={() => navigate('/shop')}>Shop</button>
           <button onClick={() => setActiveTab('journals')}>Journals</button>
           <button onClick={() => setActiveTab('tshirts')}>Tee Shirts</button>
-          <button onClick={() => navigate('/admin')}>Admin</button>
+          {/* <button onClick={() => navigate('/admin')}>Admin</button> */}
         </nav>
         <button onClick={() => navigate('/checkout')} className="nav-action">
           Checkout
