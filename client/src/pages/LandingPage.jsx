@@ -1,6 +1,9 @@
 // src/pages/LandingPage.jsx
 import { useNavigate } from 'react-router-dom'
 import { journals, tshirts } from '../data/products'
+import Navbar from '../components/Navbar'
+import Footer from '../components/Footer'
+import ProductCard from '../components/ProductCard'
 
 // Hero images — high quality editorial shots
 const HERO_IMAGE =
@@ -15,40 +18,40 @@ const CATEGORY_IMAGES = {
     'https://images.unsplash.com/photo-1513475382585-d06e58bcb0e0?auto=format&fit=crop&w=800&q=80',
 }
 
-function ProductCard({ product, type }) {
-  const navigate = useNavigate()
-  return (
-    <article className="lp-product-card" onClick={() => navigate(`/product/${product.id}`)}>
-      <div className="lp-product-card__img-wrap">
-        <img
-          src={product.image}
-          alt={product.name}
-          className="lp-product-card__img"
-          loading="lazy"
-        />
-        {type === 'journal' && (
-          <span className="lp-product-card__badge">Customisable</span>
-        )}
-      </div>
-      <div className="lp-product-card__body">
-        <p className="lp-product-card__type">{type === 'journal' ? 'Journal' : 'Tee Shirt'}</p>
-        <h3 className="lp-product-card__name">{product.name}</h3>
-        <p className="lp-product-card__desc">{product.description}</p>
-        <div className="lp-product-card__footer">
-          <span className="lp-product-card__price">
-            ₦{product.basePrice.toLocaleString('en-NG')}
-          </span>
-          <button
-            className="btn btn--dark"
-            onClick={(e) => { e.stopPropagation(); navigate(`/product/${product.id}`) }}
-          >
-            Order Now
-          </button>
-        </div>
-      </div>
-    </article>
-  )
-}
+// function ProductCard({ product, type }) {
+//   const navigate = useNavigate()
+//   return (
+//     <article className="lp-product-card" onClick={() => navigate(`/product/${product.id}`)}>
+//       <div className="lp-product-card__img-wrap">
+//         <img
+//           src={product.image}
+//           alt={product.name}
+//           className="lp-product-card__img"
+//           loading="lazy"
+//         />
+//         {type === 'journal' && (
+//           <span className="lp-product-card__badge">Customisable</span>
+//         )}
+//       </div>
+//       <div className="lp-product-card__body">
+//         <p className="lp-product-card__type">{type === 'journal' ? 'Journal' : 'Tee Shirt'}</p>
+//         <h3 className="lp-product-card__name">{product.name}</h3>
+//         <p className="lp-product-card__desc">{product.description}</p>
+//         <div className="lp-product-card__footer">
+//           <span className="lp-product-card__price">
+//             ₦{product.basePrice.toLocaleString('en-NG')}
+//           </span>
+//           <button
+//             className="btn btn--dark"
+//             onClick={(e) => { e.stopPropagation(); navigate(`/product/${product.id}`) }}
+//           >
+//             Order Now
+//           </button>
+//         </div>
+//       </div>
+//     </article>
+//   )
+// }
 
 function LandingPage() {
   const navigate = useNavigate()
@@ -58,21 +61,7 @@ function LandingPage() {
   return (
     <div className="lp-shell">
 
-      {/* ── Nav ── */}
-      <header className="lp-nav">
-        <button className="brand-mark" onClick={() => navigate('/')}>
-          <span>DH</span>
-          <strong>Djane's Hub</strong>
-        </button>
-        <nav aria-label="Site navigation">
-          <button onClick={() => navigate('/shop')}>Shop</button>
-          <button onClick={() => navigate('/shop?tab=journals')}>Journals</button>
-          <button onClick={() => navigate('/shop?tab=tshirts')}>Tee Shirts</button>
-        </nav>
-        <button className="btn btn--orange lp-nav__cta" onClick={() => navigate('/shop')}>
-          Shop Now
-        </button>
-      </header>
+     <Navbar />
 
       <main>
 
@@ -171,8 +160,7 @@ function LandingPage() {
                 product={p}
                 type={journals.includes(p) ? 'journal' : 'tshirt'}
               />
-            ))}
-          </div>
+            ))}          </div>
           <div className="lp-view-all">
             <button className="btn btn--light" onClick={() => navigate('/shop')}>
               View All Products
@@ -250,20 +238,7 @@ function LandingPage() {
 
       </main>
 
-      {/* ── Footer ── */}
-      <footer className="lp-footer">
-        <div className="lp-footer__brand">
-          <strong>Djane's Hub</strong>
-          <p>Journals, tee shirts, and custom designs made for you.</p>
-        </div>
-        <nav className="lp-footer__links" aria-label="Footer navigation">
-          <button onClick={() => navigate('/shop')}>Shop</button>
-          <button onClick={() => navigate('/shop?tab=journals')}>Journals</button>
-          <button onClick={() => navigate('/shop?tab=tshirts')}>Tee Shirts</button>
-          <button onClick={() => navigate('/checkout')}>Checkout</button>
-        </nav>
-        <p className="lp-footer__copy">© 2025 Djane's Hub · Made with ❤️ in Nigeria</p>
-      </footer>
+      <Footer />
 
     </div>
   )

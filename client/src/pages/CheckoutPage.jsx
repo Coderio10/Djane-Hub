@@ -5,49 +5,126 @@ import { api } from '../utils/api'
 import { calculateOrder, formatNaira } from '../utils/pricingEngine'
 import { calculateDeliveryDate } from '../utils/deliveryDate'
 import OrderSummary from '../components/OrderSummary'
+import Navbar from '../components/Navbar'
+import Footer from '../components/Footer'
+
+// ── Icons ──
+function IconUser() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>
+    </svg>
+  )
+}
+function IconMapPin() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/>
+    </svg>
+  )
+}
+function IconZap() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
+    </svg>
+  )
+}
+function IconBank() {
+  return (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <line x1="3" y1="22" x2="21" y2="22"/><line x1="6" y1="18" x2="6" y2="11"/>
+      <line x1="10" y1="18" x2="10" y2="11"/><line x1="14" y1="18" x2="14" y2="11"/>
+      <line x1="18" y1="18" x2="18" y2="11"/><polygon points="12 2 20 7 4 7"/>
+    </svg>
+  )
+}
+function IconCheck() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <polyline points="20 6 9 17 4 12"/>
+    </svg>
+  )
+}
+function IconChevronRight() {
+  return (
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <polyline points="9 18 15 12 9 6"/>
+    </svg>
+  )
+}
+
+// Step indicator
+function StepBar({ step }) {
+  const steps = ['Your details', 'Delivery', 'Payment']
+  return (
+    <div className="checkout-steps" aria-label="Checkout progress">
+      {steps.map((label, i) => {
+        const num = i + 1
+        const done = num < step
+        const active = num === step
+        return (
+          <div key={label} className={`checkout-step ${active ? 'is-active' : ''} ${done ? 'is-done' : ''}`}>
+            <div className="checkout-step__circle">
+              {done ? <IconCheck /> : <span>{num}</span>}
+            </div>
+            <span className="checkout-step__label">{label}</span>
+            {i < steps.length - 1 && <div className="checkout-step__line" aria-hidden="true" />}
+          </div>
+        )
+      })}
+    </div>
+  )
+}
+
+// Field wrapper
+function Field({ label, required, error, children }) {
+  return (
+    <div className={`checkout-field ${error ? 'has-error' : ''}`} data-error={error ? true : undefined}>
+      <label className="checkout-field__label">
+        {label}
+        {required && <span className="checkout-field__req" aria-hidden="true">*</span>}
+      </label>
+      {children}
+      {error && <p className="checkout-field__error" role="alert">{error}</p>}
+    </div>
+  )
+}
 
 function CheckoutPage() {
   const location = useLocation()
   const navigate = useNavigate()
-
-  // Retrieve the order data passed from ProductPage
-  // If someone navigates directly to /checkout, orderData will be undefined
   const orderData = location.state?.orderData
 
-  // ── Customer form state ──
   const [form, setForm] = useState({
-    name:        '',
-    phone:       '',
-    email:       '',
-    locationType:'futa',     // 'futa' | 'outside'
-    address:     '',         // only required if outside FUTA
-    isUrgent:    false,
+    name:         '',
+    phone:        '',
+    email:        '',
+    locationType: 'futa',
+    address:      '',
+    isUrgent:     false,
   })
+  const [errors,       setErrors]       = useState({})
+  const [showTransfer, setShowTransfer] = useState(false)
+  const [confirmed,    setConfirmed]    = useState(false)
 
-  // ── UI state ──
-  const [errors,      setErrors]      = useState({})
-  const [showTransfer,setShowTransfer]= useState(false)
-  const [confirmed,   setConfirmed]   = useState(false)
-
-  // Guard: if there's no order, send them to the shop.
-  // Keep this after hooks so React sees the same hook order on every render.
   if (!orderData) {
     return (
-      <div className="min-h-screen bg-orange-50 flex flex-col items-center justify-center gap-4">
-        <p className="text-xl font-semibold text-gray-700">No order found.</p>
-        <button
-          onClick={() => navigate('/shop')}
-          className="bg-orange-500 text-white px-6 py-2.5 rounded-xl font-semibold"
-        >
-          Go to Shop
-        </button>
+      <div className="checkout-shell">
+        <Navbar />
+        <div className="checkout-empty">
+          <span className="checkout-empty__icon">🛒</span>
+          <h2>No order found</h2>
+          <p>Head to the shop to pick something out first.</p>
+          <button className="btn btn--orange" onClick={() => navigate('/shop')}>
+            Go to Shop
+          </button>
+        </div>
+        <Footer />
       </div>
     )
   }
 
-  // ── Derived values — recalculate whenever form changes ──
-  // These aren't stored in state — they're computed fresh on every render
-  // This is the "derive don't duplicate" principle
   const enrichedOrder = { ...orderData, ...form }
   const { lineItems, total } = calculateOrder(enrichedOrder)
   const delivery = calculateDeliveryDate({
@@ -56,327 +133,237 @@ function CheckoutPage() {
     locationType: form.locationType,
   })
 
-  // ── Form field handler ──
-  // One handler for all fields — avoids writing onChange for every input
+  const step = showTransfer ? 3 : form.name || form.phone || form.email ? 2 : 1
+
   function handleField(field, value) {
-    setForm((prev) => ({ ...prev, [field]: value }))
-    // Clear the error for this field as soon as the user starts fixing it
-    if (errors[field]) {
-      setErrors((prev) => ({ ...prev, [field]: null }))
-    }
+    setForm(prev => ({ ...prev, [field]: value }))
+    if (errors[field]) setErrors(prev => ({ ...prev, [field]: null }))
   }
 
-  // ── Validation ──
   function validate() {
-    const newErrors = {}
-
-    if (!form.name.trim()) {
-      newErrors.name = 'Please enter your full name.'
-    }
-
-    // Nigerian phone: starts with 07, 08, or 09, followed by 9 digits
-    // The regex /^0[789]\d{9}$/ means:
-    // ^ = start, 0 = literal 0, [789] = one of 7/8/9,
-    // \d{9} = exactly 9 more digits, $ = end
-    const phoneClean = form.phone.replace(/\s|-/g, '')  // strip spaces and dashes
-    if (!phoneClean || !/^0[789]\d{9}$/.test(phoneClean)) {
-      newErrors.phone = 'Please enter a valid Nigerian phone number (e.g. 08012345678).'
-    }
-
-    // Basic email check — the HTML email input handles most validation
-    // but we add a quick sanity check
-    if (!form.email.trim() || !form.email.includes('@')) {
-      newErrors.email = 'Please enter a valid email address.'
-    }
-
-    if (form.locationType === 'outside' && !form.address.trim()) {
-      newErrors.address = 'Please enter your delivery address.'
-    }
-
-    setErrors(newErrors)
-
-    // Returns true if there are no errors
-    return Object.keys(newErrors).length === 0
+    const e = {}
+    if (!form.name.trim())  e.name = 'Please enter your full name.'
+    const phoneClean = form.phone.replace(/\s|-/g, '')
+    if (!phoneClean || !/^0[789]\d{9}$/.test(phoneClean))
+      e.phone = 'Please enter a valid Nigerian phone number (e.g. 08012345678).'
+    if (!form.email.trim() || !form.email.includes('@'))
+      e.email = 'Please enter a valid email address.'
+    if (form.locationType === 'outside' && !form.address.trim())
+      e.address = 'Please enter your delivery address.'
+    setErrors(e)
+    return Object.keys(e).length === 0
   }
 
-  // ── Place order ──
   function handlePlaceOrder() {
     if (!validate()) {
-      // Scroll to the first error smoothly
-      const firstError = document.querySelector('[data-error]')
-      firstError?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+      document.querySelector('[data-error]')?.scrollIntoView({ behavior: 'smooth', block: 'center' })
       return
     }
-    // Show bank transfer details
     setShowTransfer(true)
-    // Scroll down to reveal them
     setTimeout(() => {
-      document.getElementById('transfer-section')
-        ?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+      document.getElementById('transfer-section')?.scrollIntoView({ behavior: 'smooth', block: 'center' })
     }, 100)
   }
 
-  // Replace handleConfirmTransfer with this:
-async function handleConfirmTransfer() {
-  setConfirmed(true)
-
-  try {
-    // Build the payload the backend expects
-    const payload = {
-      customerName:     form.name,
-      customerPhone:    form.phone,
-      customerEmail:    form.email,
-      productType:      orderData.product.id.startsWith('journal') ? 'journal' : 'tshirt',
-      productId:        orderData.product.id,
-      productName:      orderData.product.name,
-      productColor:     orderData.selectedColor,
-      size:             orderData.selectedSize ?? null,
-      withPen:          orderData.withPen,
-      isCustomized:     orderData.isCustomized,
-      customType:       orderData.customType,
-      customText:       orderData.customText,
-      customFont:       orderData.selectedFont,
-      logoUrl:          null,   // Phase 5: upload to Supabase Storage
-      quantity:         orderData.quantity,
-      locationType:     form.locationType,
-      deliveryAddress:  form.address,
-      isUrgent:         form.isUrgent,
-      lineItems,
-      total,
-      deliveryDate:     delivery.dateString,
-      deliveryTime:     delivery.timeSlot,
-      deliveryLocation: delivery.location,
+  async function handleConfirmTransfer() {
+    setConfirmed(true)
+    try {
+      const payload = {
+        customerName:     form.name,
+        customerPhone:    form.phone,
+        customerEmail:    form.email,
+        productType:      orderData.product.id.startsWith('journal') ? 'journal' : 'tshirt',
+        productId:        orderData.product.id,
+        productName:      orderData.product.name,
+        productColor:     orderData.selectedColor,
+        size:             orderData.selectedSize ?? null,
+        withPen:          orderData.withPen,
+        isCustomized:     orderData.isCustomized,
+        customType:       orderData.customType,
+        customText:       orderData.customText,
+        customFont:       orderData.selectedFont,
+        logoUrl:          null,
+        quantity:         orderData.quantity,
+        locationType:     form.locationType,
+        deliveryAddress:  form.address,
+        isUrgent:         form.isUrgent,
+        lineItems,
+        total,
+        deliveryDate:     delivery.dateString,
+        deliveryTime:     delivery.timeSlot,
+        deliveryLocation: delivery.location,
+      }
+      const result = await api.createOrder(payload)
+      navigate('/order-confirm', {
+        state: { orderData: { ...enrichedOrder }, lineItems, total, delivery, orderId: result.orderId }
+      })
+    } catch (err) {
+      alert(`Something went wrong: ${err.message}. Please try again.`)
+      setConfirmed(false)
     }
-
-    const result = await api.createOrder(payload)
-
-    // Navigate to confirmation with the full order details
-    navigate('/order-confirm', {
-      state: { orderData: { ...enrichedOrder }, lineItems, total, delivery, orderId: result.orderId }
-    })
-
-  } catch (err) {
-    // If the API call fails, show an error and let the user retry
-    alert(`Something went wrong: ${err.message}. Please try again.`)
-    setConfirmed(false)
   }
-}
 
   return (
-    <div className="min-h-screen bg-orange-50 py-10 px-4">
-      <div className="max-w-5xl mx-auto">
+    <div className="checkout-shell">
+      <Navbar />
 
-        {/* Header */}
-        <div className="mb-8">
-          <button
-            onClick={() => navigate(-1)}
-            className="text-orange-500 text-sm font-medium mb-4 flex items-center gap-1"
-          >
-            ← Back
-          </button>
-          <h1 className="text-3xl font-bold text-gray-900">Checkout</h1>
-          <p className="text-gray-500 mt-1">Review your order and enter your details.</p>
-        </div>
+      <div className="checkout-page">
+        {/* Breadcrumb */}
+        <nav className="checkout-breadcrumb" aria-label="Breadcrumb">
+          <button onClick={() => navigate('/')}>Home</button>
+          <IconChevronRight />
+          <button onClick={() => navigate('/shop')}>Shop</button>
+          <IconChevronRight />
+          <span>Checkout</span>
+        </nav>
 
-        {/* Two-column layout */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
+        <h1 className="checkout-title">Checkout</h1>
 
-          {/* ── LEFT: Customer form ── */}
-          <div className="space-y-6">
+        <StepBar step={step} />
 
-            {/* Personal details */}
-            <div className="bg-white rounded-2xl border border-orange-100 p-6">
-              <h2 className="text-lg font-bold text-gray-900 mb-5">Your details</h2>
+        <div className="checkout-layout">
 
-              {/* Full name */}
-              <div className="mb-4" data-error={errors.name ? true : undefined}>
-                <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                  Full name <span className="text-red-400">*</span>
-                </label>
+          {/* ── LEFT: Form ── */}
+          <div className="checkout-form-col">
+
+            {/* Personal details card */}
+            <div className="checkout-card">
+              <div className="checkout-card__head">
+                <span className="checkout-card__icon"><IconUser /></span>
+                <h2>Your details</h2>
+              </div>
+
+              <Field label="Full name" required error={errors.name}>
                 <input
                   type="text"
                   value={form.name}
-                  onChange={(e) => handleField('name', e.target.value)}
+                  onChange={e => handleField('name', e.target.value)}
                   placeholder="e.g. Amina Johnson"
-                  className={`w-full border rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 transition-colors ${
-                    errors.name
-                      ? 'border-red-300 focus:ring-red-100'
-                      : 'border-gray-200 focus:border-orange-400 focus:ring-orange-100'
-                  }`}
+                  className={errors.name ? 'has-error' : ''}
+                  autoComplete="name"
                 />
-                {errors.name && (
-                  <p className="text-xs text-red-500 mt-1.5">{errors.name}</p>
-                )}
-              </div>
+              </Field>
 
-              {/* Phone */}
-              <div className="mb-4" data-error={errors.phone ? true : undefined}>
-                <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                  Phone number <span className="text-red-400">*</span>
-                </label>
+              <Field label="Phone number" required error={errors.phone}>
                 <input
                   type="tel"
                   value={form.phone}
-                  onChange={(e) => handleField('phone', e.target.value)}
+                  onChange={e => handleField('phone', e.target.value)}
                   placeholder="e.g. 08012345678"
-                  className={`w-full border rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 transition-colors ${
-                    errors.phone
-                      ? 'border-red-300 focus:ring-red-100'
-                      : 'border-gray-200 focus:border-orange-400 focus:ring-orange-100'
-                  }`}
+                  className={errors.phone ? 'has-error' : ''}
+                  autoComplete="tel"
                 />
-                {errors.phone && (
-                  <p className="text-xs text-red-500 mt-1.5">{errors.phone}</p>
-                )}
-              </div>
+              </Field>
 
-              {/* Email */}
-              <div data-error={errors.email ? true : undefined}>
-                <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                  Email address <span className="text-red-400">*</span>
-                </label>
+              <Field label="Email address" required error={errors.email}>
                 <input
                   type="email"
                   value={form.email}
-                  onChange={(e) => handleField('email', e.target.value)}
+                  onChange={e => handleField('email', e.target.value)}
                   placeholder="e.g. amina@gmail.com"
-                  className={`w-full border rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 transition-colors ${
-                    errors.email
-                      ? 'border-red-300 focus:ring-red-100'
-                      : 'border-gray-200 focus:border-orange-400 focus:ring-orange-100'
-                  }`}
+                  className={errors.email ? 'has-error' : ''}
+                  autoComplete="email"
                 />
-                {errors.email && (
-                  <p className="text-xs text-red-500 mt-1.5">{errors.email}</p>
-                )}
-              </div>
+              </Field>
             </div>
 
-            {/* Delivery location */}
-            <div className="bg-white rounded-2xl border border-orange-100 p-6">
-              <h2 className="text-lg font-bold text-gray-900 mb-5">Delivery location</h2>
+            {/* Delivery card */}
+            <div className="checkout-card">
+              <div className="checkout-card__head">
+                <span className="checkout-card__icon"><IconMapPin /></span>
+                <h2>Delivery location</h2>
+              </div>
 
-              <div className="flex flex-col gap-3 mb-4">
+              <div className="checkout-location-options">
                 {[
-                  {
-                    value:    'futa',
-                    label:    '📍 Within FUTA',
-                    sublabel: 'Free delivery · SUB Frontage',
-                  },
-                  {
-                    value:    'outside',
-                    label:    '🚚 Outside FUTA',
-                    sublabel: 'Delivery fee: ₦1,000',
-                  },
-                ].map(({ value, label, sublabel }) => (
+                  { value: 'futa',    label: 'Within FUTA',  sub: 'Free delivery · SUB Frontage',  icon: '📍' },
+                  { value: 'outside', label: 'Outside FUTA', sub: 'Delivery fee: ₦1,000',           icon: '🚚' },
+                ].map(({ value, label, sub, icon }) => (
                   <button
                     key={value}
+                    className={`checkout-location-btn ${form.locationType === value ? 'is-selected' : ''}`}
                     onClick={() => handleField('locationType', value)}
-                    className={`w-full flex items-center gap-4 p-4 rounded-xl border text-left transition-all ${
-                      form.locationType === value
-                        ? 'border-orange-400 bg-orange-50'
-                        : 'border-gray-200 bg-white hover:border-orange-200'
-                    }`}
+                    aria-pressed={form.locationType === value}
                   >
-                    {/* Radio circle */}
-                    <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 ${
-                      form.locationType === value
-                        ? 'border-orange-500'
-                        : 'border-gray-300'
-                    }`}>
-                      {form.locationType === value && (
-                        <div className="w-2.5 h-2.5 rounded-full bg-orange-500" />
-                      )}
-                    </div>
+                    <span className="checkout-location-btn__radio" aria-hidden="true">
+                      {form.locationType === value && <span />}
+                    </span>
+                    <span className="checkout-location-btn__icon">{icon}</span>
                     <div>
-                      <p className="text-sm font-medium text-gray-800">{label}</p>
-                      <p className="text-xs text-gray-500">{sublabel}</p>
+                      <p className="checkout-location-btn__label">{label}</p>
+                      <p className="checkout-location-btn__sub">{sub}</p>
                     </div>
+                    {form.locationType === value && (
+                      <span className="checkout-location-btn__check">
+                        <IconCheck />
+                      </span>
+                    )}
                   </button>
                 ))}
               </div>
 
-              {/* Address field — only for outside FUTA */}
               {form.locationType === 'outside' && (
-                <div data-error={errors.address ? true : undefined}>
-                  <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                    Delivery address <span className="text-red-400">*</span>
-                  </label>
+                <Field label="Delivery address" required error={errors.address}>
                   <textarea
                     value={form.address}
-                    onChange={(e) => handleField('address', e.target.value)}
+                    onChange={e => handleField('address', e.target.value)}
                     placeholder="Enter your full delivery address"
                     rows={3}
-                    className={`w-full border rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 resize-none transition-colors ${
-                      errors.address
-                        ? 'border-red-300 focus:ring-red-100'
-                        : 'border-gray-200 focus:border-orange-400 focus:ring-orange-100'
-                    }`}
+                    className={errors.address ? 'has-error' : ''}
                   />
-                  {errors.address && (
-                    <p className="text-xs text-red-500 mt-1.5">{errors.address}</p>
-                  )}
-                </div>
+                </Field>
               )}
             </div>
 
-            {/* Urgent toggle */}
-            <div className="bg-white rounded-2xl border border-orange-100 p-6">
-              <div className="flex items-start justify-between gap-4">
-                <div>
-                  <h2 className="text-base font-bold text-gray-900">Urgent delivery</h2>
-                  <p className="text-sm text-gray-500 mt-1">
-                    Need it faster? An extra ₦1,500 applies.
-                    Delivery prioritised by 1 business day.
-                  </p>
-                </div>
-                {/* Toggle switch */}
+            {/* Urgent toggle card */}
+            <div className="checkout-card checkout-card--urgent">
+              <div className="checkout-card__head">
+                <span className="checkout-card__icon"><IconZap /></span>
+                <h2>Urgent delivery</h2>
                 <button
+                  className={`checkout-toggle ${form.isUrgent ? 'is-on' : ''}`}
                   onClick={() => handleField('isUrgent', !form.isUrgent)}
-                  className={`relative w-12 h-6 rounded-full transition-colors flex-shrink-0 mt-1 ${
-                    form.isUrgent ? 'bg-orange-500' : 'bg-gray-200'
-                  }`}
+                  aria-pressed={form.isUrgent}
+                  aria-label={`Urgent delivery ${form.isUrgent ? 'enabled' : 'disabled'}`}
                 >
-                  <span className={`absolute top-0.5 w-5 h-5 rounded-full bg-white shadow-sm transition-all ${
-                    form.isUrgent ? 'left-6' : 'left-0.5'
-                  }`} />
+                  <span />
                 </button>
               </div>
+              <p className="checkout-card__sub">
+                Need it faster? An extra ₦1,500 applies. Delivery prioritised by 1 business day.
+              </p>
+              {form.isUrgent && (
+                <p className="checkout-urgent-note">
+                  ⚡ Urgent processing is active — your order will be prioritised.
+                </p>
+              )}
             </div>
 
-            {/* Place Order button */}
+            {/* Place order CTA */}
             {!showTransfer && (
-              <button
-                onClick={handlePlaceOrder}
-                className="w-full bg-orange-500 hover:bg-orange-600 text-white py-4 rounded-2xl font-bold text-lg transition-colors shadow-sm"
-              >
-                Place Order →
+              <button className="btn btn--orange checkout-cta" onClick={handlePlaceOrder}>
+                Place Order
+                <IconChevronRight />
               </button>
             )}
 
-            {/* ── Transfer reveal ── */}
+            {/* Transfer section */}
             {showTransfer && (
-              <div
-                id="transfer-section"
-                className="bg-white rounded-2xl border-2 border-orange-300 p-6 space-y-4"
-              >
-                <div className="flex items-center gap-3 mb-2">
-                  <span className="text-2xl">🏦</span>
-                  <h2 className="text-lg font-bold text-gray-900">
-                    Complete your payment
-                  </h2>
+              <div id="transfer-section" className="checkout-transfer">
+                <div className="checkout-transfer__head">
+                  <span className="checkout-transfer__icon"><IconBank /></span>
+                  <div>
+                    <h2>Complete your payment</h2>
+                    <p>Transfer to the account below, then confirm below.</p>
+                  </div>
                 </div>
 
-                <p className="text-sm text-gray-600 leading-relaxed">
-                  Transfer <span className="font-bold text-orange-600 text-base">
-                    {formatNaira(total)}
-                  </span> to the account below.
-                  Use your <span className="font-semibold">phone number</span> as
-                  the transfer reference.
+                <p className="checkout-transfer__amount">
+                  Transfer <strong>{formatNaira(total)}</strong> — use your{' '}
+                  <strong>phone number</strong> as reference.
                 </p>
 
-                {/* Bank details */}
-                <div className="bg-orange-50 rounded-xl p-4 space-y-2">
+                <div className="checkout-bank-details">
                   {[
                     { label: 'Bank',           value: 'First Bank Nigeria' },
                     { label: 'Account Number', value: '0123456789' },
@@ -384,44 +371,64 @@ async function handleConfirmTransfer() {
                     { label: 'Amount',         value: formatNaira(total) },
                     { label: 'Reference',      value: form.phone || 'Your phone number' },
                   ].map(({ label, value }) => (
-                    <div key={label} className="flex justify-between items-center">
-                      <span className="text-xs text-gray-500">{label}</span>
-                      <span className="text-sm font-semibold text-gray-800">
-                        {value}
-                      </span>
+                    <div key={label} className="checkout-bank-row">
+                      <span>{label}</span>
+                      <strong>{value}</strong>
                     </div>
                   ))}
                 </div>
 
                 <button
+                  className="btn checkout-confirm-btn"
                   onClick={handleConfirmTransfer}
                   disabled={confirmed}
-                  className="w-full bg-green-500 hover:bg-green-600 disabled:opacity-50 text-white py-4 rounded-xl font-bold text-base transition-colors"
                 >
-                  {confirmed ? 'Processing...' : "✅ I've made the transfer"}
+                  {confirmed
+                    ? 'Processing your order…'
+                    : <><IconCheck /> I've made the transfer</>
+                  }
                 </button>
 
-                <p className="text-xs text-gray-400 text-center">
-                  Your order will be confirmed once payment is received.
+                <p className="checkout-transfer__note">
+                  Your order is confirmed once payment is received.
                 </p>
               </div>
             )}
-
           </div>
 
-          {/* ── RIGHT: Order Summary (sticky) ── */}
-          <div className="lg:sticky lg:top-8">
+          {/* ── RIGHT: Order summary (sticky) ── */}
+          <div className="checkout-summary-col">
+            {/* Product preview */}
+            <div className="checkout-product-preview">
+              <img
+                src={orderData.product.image}
+                alt={orderData.product.name}
+                className="checkout-product-preview__img"
+                onError={e => {
+                  e.currentTarget.src = 'https://images.unsplash.com/photo-1544816565-c7dd5cc1e3da?auto=format&fit=crop&w=300&q=70'
+                }}
+              />
+              <div>
+                <p className="checkout-product-preview__name">{orderData.product.name}</p>
+                <p className="checkout-product-preview__meta">
+                  Qty: {orderData.quantity}
+                  {orderData.selectedSize ? ` · Size: ${orderData.selectedSize}` : ''}
+                </p>
+              </div>
+            </div>
+
             <OrderSummary
               lineItems={lineItems}
               total={total}
               delivery={delivery}
-              locationType={form.locationType}
               address={form.address}
             />
           </div>
 
         </div>
       </div>
+
+      <Footer />
     </div>
   )
 }

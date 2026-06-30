@@ -155,7 +155,7 @@ function JournalCustomizer({ product, onOrderReady }) {
           </h3>
           <div className="flex gap-3">
             {[
-              { label: "✨ Yes, customise it (+₦1,000)", value: true },
+              { label: "Yes, customise it (+₦1,000)", value: true },
               { label: "No, keep it plain", value: false },
             ].map(({ label, value }) => (
               <button
@@ -191,9 +191,9 @@ function JournalCustomizer({ product, onOrderReady }) {
             {/* Type selector: text / logo / whatsapp */}
             <div className="flex flex-wrap gap-3 mb-6">
               {[
-                { label: "✍️ Print text", value: "text" },
-                { label: "🖼️ Upload a logo", value: "logo" },
-                { label: "💬 I don't have a design", value: "whatsapp" },
+                { label: "Print text", value: "text" },
+                { label: "Upload a logo", value: "logo" },
+                { label: "I don't have a design", value: "whatsapp" },
               ].map(({ label, value }) => (
                 <button
                   key={value}

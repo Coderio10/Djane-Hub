@@ -3,23 +3,21 @@ import { useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { journals, tshirts } from '../data/products'
 import JournalCustomizer from '../components/JournalCustomizer'
+import Navbar from '../components/Navbar'
+import Footer from '../components/Footer'
 
-function ProductVisual({ type, product, size = 'detail' }) {
+function ProductImage({ product, size = 'main' }) {
   return (
-    <div className={`product-visual product-visual--${type} product-visual--${size}`}>
-      <div className="product-visual__glow" />
-      <div className="product-visual__object">
-        {product.image ? (
-          <img
-            src={product.image}
-            alt={product.name}
-            className="product-visual__image"
-          />
-        ) : (
-          <span>{type === 'journal' ? '📓' : '👕'}</span>
-        )}
-      </div>
-      <div className="product-visual__label">{product.name}</div>
+    <div className={`pd-img-wrap pd-img-wrap--${size}`}>
+      <img
+        src={product.image}
+        alt={product.name}
+        className="pd-img"
+        onError={e => {
+          e.currentTarget.src =
+            'https://images.unsplash.com/photo-1544816565-c7dd5cc1e3da?auto=format&fit=crop&w=600&q=70'
+        }}
+      />
     </div>
   )
 }
@@ -44,7 +42,6 @@ function ProductPage() {
       </div>
     )
   }
-
   return <ProductDetailContent product={product} id={id} />
 }
 
@@ -58,9 +55,7 @@ function ProductDetailContent({ product, id }) {
   const [quantity, setQuantity] = useState(1)
 
   function handleOrderReady(orderData) {
-    navigate('/checkout', {
-      state: { orderData }
-    })
+    navigate('/checkout', { state: { orderData } })
   }
 
   function handleTeeCheckout() {
@@ -80,54 +75,47 @@ function ProductDetailContent({ product, id }) {
   }
 
   return (
-    <div className="store-shell product-page">
-      <header className="site-nav">
-        <button onClick={() => navigate('/shop')} className="brand-mark">
-          <span>DH</span>
-          <strong>Djane's Hub</strong>
-        </button>
-        <nav aria-label="Store navigation">
+    <div className="pd-shell">
+      <Navbar />
+
+      <main className="pd-page">
+        <nav className="pd-breadcrumb" aria-label="Breadcrumb">
+          <button onClick={() => navigate('/')}>Home</button>
+          <span aria-hidden="true">›</span>
           <button onClick={() => navigate('/shop')}>Shop</button>
-          <button onClick={() => navigate('/shop')}>Journals</button>
-          <button onClick={() => navigate('/shop')}>Tee Shirts</button>
+          <span aria-hidden="true">›</span>
+          <span>{product.name}</span>
         </nav>
-        <button onClick={() => navigate(-1)} className="nav-action">
-          Back
-        </button>
-      </header>
 
-      <main>
-        <button onClick={() => navigate('/shop')} className="back-link">
-          ← Back to Shop
-        </button>
-
-        <section className="product-detail">
-          <div className="product-gallery">
-            <div className="product-gallery__main">
-              <ProductVisual type={productType} product={product} />
+        <section className="pd-detail">
+          {/* Gallery */}
+          <div className="pd-gallery">
+            <div className="pd-gallery__main">
+              <ProductImage product={product} size="main" />
             </div>
-            <div className="product-gallery__thumbs">
-              {[0, 1, 2, 3].map((item) => (
-                <button key={item} aria-label={`${product.name} preview ${item + 1}`}>
-                  <ProductVisual type={productType} product={product} size="thumb" />
+            <div className="pd-gallery__thumbs">
+              {[product, product, product, product].map((p, i) => (
+                <button key={i} className={i === 0 ? 'is-active' : ''} aria-label={`${product.name} view ${i + 1}`}>
+                  <ProductImage product={p} size="thumb" />
                 </button>
               ))}
             </div>
           </div>
 
+          {/* Info */}
           <div className="product-info">
             <span className="eyebrow">{isJournal ? 'Custom journal' : 'Premium tee shirt'}</span>
             <h1>{product.name}</h1>
             <div className="rating-row">
-              <span>★★★★★</span>
-              <p>25k+ total reviews</p>
+              <span aria-label="5 out of 5 stars">★★★★★</span>
+              <p>25k+ reviews</p>
             </div>
             <p className="product-description">{product.description}</p>
             <p className="product-price">₦{product.basePrice.toLocaleString('en-NG')}</p>
 
             <div className="option-block">
               <div className="option-heading">
-                <strong>Color</strong>
+                <strong>Colour</strong>
                 <span>{product.colorNames[product.colors.indexOf(selectedColor)]}</span>
               </div>
               <div className="product-card__swatches product-card__swatches--large">
@@ -138,6 +126,8 @@ function ProductDetailContent({ product, id }) {
                     onClick={() => setSelectedColor(color)}
                     className={`color-swatch ${selectedColor === color ? 'is-active' : ''}`}
                     style={{ backgroundColor: color }}
+                    aria-label={product.colorNames[i]}
+                    aria-pressed={selectedColor === color}
                   />
                 ))}
               </div>
@@ -148,7 +138,6 @@ function ProductDetailContent({ product, id }) {
                 <div className="option-block">
                   <div className="option-heading">
                     <strong>Size</strong>
-                    <span>Size chart</span>
                   </div>
                   <div className="size-grid">
                     {product.sizes.map((size) => (
@@ -156,6 +145,7 @@ function ProductDetailContent({ product, id }) {
                         key={size}
                         onClick={() => setSelectedSize(size)}
                         className={selectedSize === size ? 'is-active' : ''}
+                        aria-pressed={selectedSize === size}
                       >
                         {size}
                       </button>
@@ -164,16 +154,16 @@ function ProductDetailContent({ product, id }) {
                 </div>
 
                 <div className="purchase-row">
-                  <div className="quantity-stepper">
-                    <button onClick={() => setQuantity((q) => Math.max(1, q - 1))}>−</button>
-                    <span>{quantity}</span>
-                    <button onClick={() => setQuantity((q) => q + 1)}>+</button>
+                  <div className="quantity-stepper" role="group" aria-label="Quantity">
+                    <button onClick={() => setQuantity((q) => Math.max(1, q - 1))} aria-label="Decrease">−</button>
+                    <span aria-live="polite">{quantity}</span>
+                    <button onClick={() => setQuantity((q) => q + 1)} aria-label="Increase">+</button>
                   </div>
-                  <button onClick={handleTeeCheckout} className="btn btn--dark">
-                    Buy Now
+                  <button onClick={handleTeeCheckout} className="btn btn--orange">
+                    Order Now
                   </button>
                   <button onClick={handleTeeCheckout} className="btn btn--light">
-                    Add To Cart
+                    Buy Now
                   </button>
                 </div>
               </>
@@ -181,10 +171,10 @@ function ProductDetailContent({ product, id }) {
 
             <div className="spec-grid">
               {[
-                ['Material', isJournal ? 'Premium paper and durable cover' : '100% cotton, premium weight'],
-                ['Delivery', isJournal ? '2 business days' : '3 business days'],
-                ['Customisation', isJournal ? 'Text, logo, or design support' : 'Size and colour selection'],
-                ['Pickup', 'SUB Frontage, FUTA'],
+                ['Material',      isJournal ? 'Premium paper & durable cover' : '100% cotton, premium weight'],
+                ['Delivery',      isJournal ? '2 business days' : '3 business days'],
+                ['Customisation', isJournal ? 'Text, logo, or design support' : 'Size & colour selection'],
+                ['Pickup',        'SUB Frontage, FUTA'],
               ].map(([label, value]) => (
                 <div key={label}>
                   <span>{label}</span>
@@ -204,10 +194,7 @@ function ProductDetailContent({ product, id }) {
               </div>
               <p>Choose colour, add-ons, cover text, logo upload, quantity, and checkout.</p>
             </div>
-            <JournalCustomizer
-              product={product}
-              onOrderReady={handleOrderReady}
-            />
+            <JournalCustomizer product={product} onOrderReady={handleOrderReady} />
           </section>
         )}
 
@@ -220,10 +207,10 @@ function ProductDetailContent({ product, id }) {
             {[
               ['Amina', 'The journal looked premium and the checkout was straightforward.'],
               ['David', 'The tee quality feels solid. Delivery timing was clear too.'],
-              ['Tolu', 'I liked seeing the journal preview before placing my order.'],
+              ['Tolu',  'I liked seeing the journal preview before placing my order.'],
             ].map(([name, quote]) => (
               <article key={name}>
-                <span>★★★★★</span>
+                <span aria-label="5 stars">★★★★★</span>
                 <p>{quote}</p>
                 <strong>{name}</strong>
               </article>
@@ -241,17 +228,23 @@ function ProductDetailContent({ product, id }) {
           <div className="product-grid product-grid--compact">
             {related.map((item) => (
               <article key={item.id} className="premium-card related-card">
-                <ProductVisual type={productType} product={item} size="thumb" />
-                <h3>{item.name}</h3>
-                <p>₦{item.basePrice.toLocaleString('en-NG')}</p>
+                <div className="related-card__img">
+                  <ProductImage product={item} size="thumb" />
+                </div>
+                <div>
+                  <h3>{item.name}</h3>
+                  <p>₦{item.basePrice.toLocaleString('en-NG')}</p>
+                </div>
                 <button onClick={() => navigate(`/product/${item.id}`)} className="btn btn--light">
-                  View Product
+                  View
                 </button>
               </article>
             ))}
           </div>
         </section>
       </main>
+
+      <Footer />
     </div>
   )
 }
